@@ -19,7 +19,16 @@ A lightweight macOS menu bar app for viewing and managing open network ports.
 
 ### Download (Recommended)
 
-Download the latest `.app` from [Releases](../../releases).
+Download the latest DMG from [Releases](../../releases).
+
+**After installing, run this command to allow the app:**
+```bash
+xattr -cr /Applications/Ports.app
+```
+
+Then open Ports from Applications (or right-click → Open).
+
+> The app is not notarized, so macOS quarantines it. The command above removes the quarantine flag.
 
 ### Build from Source
 
