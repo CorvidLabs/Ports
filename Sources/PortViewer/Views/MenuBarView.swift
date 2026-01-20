@@ -19,6 +19,10 @@ struct MenuBarView: View {
         VStack(alignment: .leading, spacing: 0) {
             headerView
 
+            if appState.availableUpdate != nil {
+                updateBanner
+            }
+
             Divider().opacity(0.3)
 
             searchField
@@ -287,6 +291,46 @@ struct MenuBarView: View {
         }
     }
 
+    // MARK: - Update Banner
+
+    private var updateBanner: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "arrow.down.circle.fill")
+                .foregroundStyle(.blue)
+                .font(.caption)
+
+            VStack(alignment: .leading, spacing: 0) {
+                Text("Update available")
+                    .font(monoSmall)
+                    .foregroundStyle(.primary)
+                if let update = appState.availableUpdate {
+                    Text("v\(update.version)")
+                        .font(monoTiny)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Spacer()
+
+            Button(action: { Task { await appState.downloadUpdate() } }) {
+                Text("download")
+                    .font(monoTiny)
+                    .foregroundStyle(.blue)
+            }
+            .buttonStyle(.plain)
+
+            Button(action: { appState.dismissUpdate() }) {
+                Image(systemName: "xmark")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+        .background(Color.blue.opacity(0.1))
+    }
+
     // MARK: - Footer
 
     private var footerView: some View {
@@ -299,6 +343,10 @@ struct MenuBarView: View {
             .controlSize(.small)
 
             Spacer()
+
+            Text("v0.1.0")
+                .font(monoTiny)
+                .foregroundStyle(.quaternary)
 
             Button(action: { NSApplication.shared.terminate(nil) }) {
                 Text("quit")

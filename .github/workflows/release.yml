@@ -25,15 +25,27 @@ jobs:
         with:
           swift-version: '5.9'
 
+      - name: Get Version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          fi
+
       - name: Build Release
         run: swift build -c release
 
       - name: Create App Bundle
         run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
           mkdir -p Ports.app/Contents/MacOS
           mkdir -p Ports.app/Contents/Resources
           cp .build/release/PortViewer Ports.app/Contents/MacOS/Ports
-          cat > Ports.app/Contents/Info.plist << 'PLIST'
+
+          cat > Ports.app/Contents/Info.plist << PLIST
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
@@ -44,36 +56,57 @@ jobs:
               <string>com.corvidlabs.ports</string>
               <key>CFBundleName</key>
               <string>Ports</string>
+              <key>CFBundleDisplayName</key>
+              <string>Ports</string>
               <key>CFBundleVersion</key>
-              <string>1.0.0</string>
+              <string>${VERSION}</string>
               <key>CFBundleShortVersionString</key>
-              <string>1.0.0</string>
+              <string>${VERSION}</string>
               <key>LSMinimumSystemVersion</key>
               <string>13.0</string>
               <key>LSUIElement</key>
               <true/>
               <key>CFBundleIconFile</key>
               <string>AppIcon</string>
+              <key>NSHighResolutionCapable</key>
+              <true/>
           </dict>
           </plist>
           PLIST
 
       - name: Create DMG
         run: |
-          hdiutil create -volname "Ports" -srcfolder Ports.app -ov -format UDZO Ports.dmg
+          # Install create-dmg
+          brew install create-dmg
+
+          # Create a temporary directory for DMG contents
+          mkdir -p dmg_contents
+          cp -r Ports.app dmg_contents/
+          ln -s /Applications dmg_contents/Applications
+
+          # Create DMG with nice layout
+          create-dmg \
+            --volname "Ports" \
+            --volicon "Ports.app/Contents/Resources/AppIcon.icns" \
+            --window-pos 200 120 \
+            --window-size 600 400 \
+            --icon-size 100 \
+            --icon "Ports.app" 150 185 \
+            --icon "Applications" 450 185 \
+            --hide-extension "Ports.app" \
+            --app-drop-link 450 185 \
+            --no-internet-enable \
+            "Ports-${{ steps.version.outputs.version }}.dmg" \
+            "dmg_contents/" \
+          || {
+            # Fallback if create-dmg fails (no icon, etc)
+            echo "create-dmg failed, using hdiutil fallback"
+            hdiutil create -volname "Ports" -srcfolder dmg_contents -ov -format UDZO "Ports-${{ steps.version.outputs.version }}.dmg"
+          }
 
       - name: Create ZIP
         run: |
-          zip -r Ports.zip Ports.app
-
-      - name: Get Version
-        id: version
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
-          else
-            echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-          fi
+          zip -r "Ports-${{ steps.version.outputs.version }}.zip" Ports.app
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
@@ -83,22 +116,30 @@ jobs:
           draft: false
           prerelease: ${{ contains(steps.version.outputs.version, 'alpha') || contains(steps.version.outputs.version, 'beta') }}
           files: |
-            Ports.dmg
-            Ports.zip
+            Ports-${{ steps.version.outputs.version }}.dmg
+            Ports-${{ steps.version.outputs.version }}.zip
           body: |
             ## Ports v${{ steps.version.outputs.version }}
 
-            macOS menu bar app for viewing and managing open network ports.
+            A lightweight macOS menu bar app for viewing and managing open network ports.
 
             ### Installation
 
-            1. Download `Ports.dmg` or `Ports.zip`
-            2. Extract and drag `Ports.app` to Applications
+            1. Download `Ports-${{ steps.version.outputs.version }}.dmg`
+            2. Open the DMG and drag **Ports** to **Applications**
             3. Launch Ports from Applications
+            4. Look for the network icon in your menu bar
 
-            **Note:** You may need to right-click and select "Open" the first time due to Gatekeeper.
+            > **Note:** First launch may require right-click → Open due to Gatekeeper.
+
+            ### Features
+            - Smart categorization (dev, web, database, gaming, media, comms, macos)
+            - Risk indicators and exposure info
+            - One-click process termination
+            - Pin favorites for quick access
+            - Auto-update notifications
 
             ### Requirements
-            - macOS 13.0+
+            - macOS 13.0 or later
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

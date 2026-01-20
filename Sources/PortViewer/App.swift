@@ -42,11 +42,14 @@ final class AppState: ObservableObject {
     @Published internal var searchText = ""
     @Published internal var favorites: Set<Int> = []
     @Published internal var showOnlyListening = true
+    @Published internal var availableUpdate: UpdateChecker.Release?
+    @Published internal var isCheckingForUpdates = false
 
     // MARK: - Services
 
     internal let scanner = PortScanner()
     internal let killer = ProcessKiller()
+    internal let updateChecker = UpdateChecker()
 
     // MARK: - Computed Properties
 
@@ -90,7 +93,10 @@ final class AppState: ObservableObject {
 
     init() {
         loadFavorites()
-        Task { await refresh() }
+        Task {
+            await refresh()
+            await checkForUpdates()
+        }
     }
 
     // MARK: - Public Methods
@@ -146,5 +152,36 @@ final class AppState: ObservableObject {
 
     private func saveFavorites() {
         UserDefaults.standard.set(Array(favorites), forKey: "favorites")
+    }
+
+    // MARK: - Update Methods
+
+    internal func checkForUpdates() async {
+        isCheckingForUpdates = true
+
+        do {
+            availableUpdate = try await updateChecker.checkForUpdates()
+        } catch {
+            // Silently fail - updates are optional
+        }
+
+        isCheckingForUpdates = false
+    }
+
+    internal func downloadUpdate() async {
+        guard let update = availableUpdate else { return }
+        await updateChecker.openDownload(update)
+    }
+
+    internal func openReleasesPage() async {
+        await updateChecker.openReleasesPage()
+    }
+
+    internal func getCurrentVersion() async -> String {
+        await updateChecker.getCurrentVersion()
+    }
+
+    internal func dismissUpdate() {
+        availableUpdate = nil
     }
 }
