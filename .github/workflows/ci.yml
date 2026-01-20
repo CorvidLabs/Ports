@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build & Test
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Swift
+        uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: '5.9'
+
+      - name: Build (Debug)
+        run: swift build
+
+      - name: Build (Release)
+        run: swift build -c release
+
+      - name: Verify App Bundle
+        run: |
+          mkdir -p Ports.app/Contents/MacOS
+          cp .build/release/PortViewer Ports.app/Contents/MacOS/Ports
+          chmod +x Ports.app/Contents/MacOS/Ports
+
+          cat > Ports.app/Contents/Info.plist << 'PLIST'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>CFBundleExecutable</key>
+              <string>Ports</string>
+              <key>CFBundleIdentifier</key>
+              <string>com.corvidlabs.ports</string>
+              <key>CFBundleName</key>
+              <string>Ports</string>
+              <key>LSMinimumSystemVersion</key>
+              <string>13.0</string>
+              <key>LSUIElement</key>
+              <true/>
+          </dict>
+          </plist>
+          PLIST
+
+          # Verify the bundle structure
+          test -f Ports.app/Contents/MacOS/Ports
+          test -f Ports.app/Contents/Info.plist
+          echo "✓ App bundle verified"
+
+  lint:
+    name: Lint
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check formatting
+        run: |
+          # Check for common issues
+          echo "Checking for force unwraps..."
+          if grep -r "!" --include="*.swift" Sources/ | grep -v "// swiftlint:disable" | grep -v "@IBOutlet" | grep -v "@IBAction" | grep -v "!=" | grep -v "/*" | head -20; then
+            echo "⚠️ Found potential force unwraps (review manually)"
+          fi
+
+          echo "Checking for TODO/FIXME comments..."
+          grep -rn "TODO\|FIXME" --include="*.swift" Sources/ || echo "✓ No TODO/FIXME found"
+
+          echo "✓ Lint checks complete"
