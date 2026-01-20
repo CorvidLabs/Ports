@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// About view displaying app information.
-internal struct AboutView: View {
+struct AboutView: View {
 
     // MARK: - Properties
 
@@ -12,7 +12,7 @@ internal struct AboutView: View {
 
     // MARK: - Body
 
-    internal var body: some View {
+    var body: some View {
         VStack(spacing: 16) {
             // Icon
             ZStack {

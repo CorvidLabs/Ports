@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Settings view for the app.
-internal struct SettingsView: View {
+struct SettingsView: View {
 
     // MARK: - Properties
 
@@ -10,7 +10,7 @@ internal struct SettingsView: View {
 
     // MARK: - Body
 
-    internal var body: some View {
+    var body: some View {
         TabView {
             generalTab
                 .tabItem {

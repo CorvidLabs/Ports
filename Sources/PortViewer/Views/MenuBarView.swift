@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Menu bar popup view displaying ports grouped by category.
-internal struct MenuBarView: View {
+struct MenuBarView: View {
 
     // MARK: - Properties
 
@@ -18,7 +18,7 @@ internal struct MenuBarView: View {
 
     // MARK: - Body
 
-    internal var body: some View {
+    var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             headerView
 

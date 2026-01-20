@@ -1,15 +1,15 @@
 import SwiftUI
 
 /// Detailed view for a single port.
-internal struct PortDetailView: View {
+struct PortDetailView: View {
 
     // MARK: - Properties
 
-    internal let port: PortInfo
-    internal let onKill: () -> Void
-    internal let onForceKill: () -> Void
-    internal let onToggleFavorite: () -> Void
-    internal let isFavorite: Bool
+    let port: PortInfo
+    let onKill: () -> Void
+    let onForceKill: () -> Void
+    let onToggleFavorite: () -> Void
+    let isFavorite: Bool
 
     private let mono = Font.system(.body, design: .monospaced)
     private let monoSmall = Font.system(.caption, design: .monospaced)
@@ -17,7 +17,7 @@ internal struct PortDetailView: View {
 
     // MARK: - Body
 
-    internal var body: some View {
+    var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             // Header
             HStack(spacing: 8) {

@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-internal struct PortViewerApp: App {
+struct PortViewerApp: App {
 
     // MARK: - Properties
 
@@ -9,7 +9,7 @@ internal struct PortViewerApp: App {
 
     // MARK: - Body
 
-    internal var body: some Scene {
+    var body: some Scene {
         MenuBarExtra {
             MenuBarView()
                 .environmentObject(appState)
@@ -35,29 +35,29 @@ internal struct PortViewerApp: App {
 
 /// Main application state managing ports, settings, and services.
 @MainActor
-internal final class AppState: ObservableObject {
+final class AppState: ObservableObject {
 
     // MARK: - Published Properties
 
-    @Published internal var ports: [PortInfo] = []
-    @Published internal var isLoading = false
-    @Published internal var errorMessage: String?
-    @Published internal var searchText = ""
-    @Published internal var favorites: Set<Int> = []
-    @Published internal var showOnlyListening = true
-    @Published internal var availableUpdate: UpdateChecker.Release?
-    @Published internal var isCheckingForUpdates = false
+    @Published var ports: [PortInfo] = []
+    @Published var isLoading = false
+    @Published var errorMessage: String?
+    @Published var searchText = ""
+    @Published var favorites: Set<Int> = []
+    @Published var showOnlyListening = true
+    @Published var availableUpdate: UpdateChecker.Release?
+    @Published var isCheckingForUpdates = false
 
     // MARK: - Services
 
-    internal let scanner = PortScanner()
-    internal let killer = ProcessKiller()
-    internal let updateChecker = UpdateChecker()
-    internal var launchAtLogin = LaunchAtLogin()
+    let scanner = PortScanner()
+    let killer = ProcessKiller()
+    let updateChecker = UpdateChecker()
+    var launchAtLogin = LaunchAtLogin()
 
     // MARK: - Computed Properties
 
-    internal var filteredPorts: [PortInfo] {
+    var filteredPorts: [PortInfo] {
         var result = ports
 
         if showOnlyListening {
@@ -75,7 +75,7 @@ internal final class AppState: ObservableObject {
         return result
     }
 
-    internal var groupedPorts: [(category: PortInfo.Category, ports: [PortInfo])] {
+    var groupedPorts: [(category: PortInfo.Category, ports: [PortInfo])] {
         let grouped = Dictionary(grouping: filteredPorts) { $0.category }
         return PortInfo.Category.allCases
             .compactMap { category in
@@ -85,11 +85,11 @@ internal final class AppState: ObservableObject {
             .sorted { $0.category.sortOrder < $1.category.sortOrder }
     }
 
-    internal var favoritePorts: [PortInfo] {
+    var favoritePorts: [PortInfo] {
         filteredPorts.filter { favorites.contains($0.port) }.sorted { $0.port < $1.port }
     }
 
-    internal var listeningCount: Int {
+    var listeningCount: Int {
         ports.filter { $0.state == .listen || $0.state == nil }.count
     }
 
@@ -105,7 +105,7 @@ internal final class AppState: ObservableObject {
 
     // MARK: - Public Methods
 
-    internal func refresh() async {
+    func refresh() async {
         isLoading = true
         errorMessage = nil
 
@@ -118,7 +118,7 @@ internal final class AppState: ObservableObject {
         isLoading = false
     }
 
-    internal func killProcess(_ port: PortInfo, force: Bool = false) async -> Bool {
+    func killProcess(_ port: PortInfo, force: Bool = false) async -> Bool {
         do {
             if force {
                 try await killer.forceKill(pid: port.pid, processName: port.processName)
@@ -133,7 +133,7 @@ internal final class AppState: ObservableObject {
         }
     }
 
-    internal func toggleFavorite(_ port: Int) {
+    func toggleFavorite(_ port: Int) {
         if favorites.contains(port) {
             favorites.remove(port)
         } else {
@@ -142,7 +142,7 @@ internal final class AppState: ObservableObject {
         saveFavorites()
     }
 
-    internal func isFavorite(_ port: Int) -> Bool {
+    func isFavorite(_ port: Int) -> Bool {
         favorites.contains(port)
     }
 
@@ -160,7 +160,7 @@ internal final class AppState: ObservableObject {
 
     // MARK: - Update Methods
 
-    internal func checkForUpdates() async {
+    func checkForUpdates() async {
         isCheckingForUpdates = true
 
         do {
@@ -172,20 +172,20 @@ internal final class AppState: ObservableObject {
         isCheckingForUpdates = false
     }
 
-    internal func downloadUpdate() async {
+    func downloadUpdate() async {
         guard let update = availableUpdate else { return }
         await updateChecker.openDownload(update)
     }
 
-    internal func openReleasesPage() async {
+    func openReleasesPage() async {
         await updateChecker.openReleasesPage()
     }
 
-    internal func getCurrentVersion() async -> String {
+    func getCurrentVersion() async -> String {
         await updateChecker.getCurrentVersion()
     }
 
-    internal func dismissUpdate() {
+    func dismissUpdate() {
         availableUpdate = nil
     }
 }
