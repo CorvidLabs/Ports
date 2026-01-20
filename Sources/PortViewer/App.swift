@@ -37,6 +37,12 @@ struct PortViewerApp: App {
 @MainActor
 final class AppState: ObservableObject {
 
+    // MARK: - Constants
+
+    private enum StorageKey {
+        static let favorites = "favorites"
+    }
+
     // MARK: - Published Properties
 
     @Published var ports: [PortInfo] = []
@@ -149,13 +155,13 @@ final class AppState: ObservableObject {
     // MARK: - Private Methods
 
     private func loadFavorites() {
-        if let data = UserDefaults.standard.array(forKey: "favorites") as? [Int] {
+        if let data = UserDefaults.standard.array(forKey: StorageKey.favorites) as? [Int] {
             favorites = Set(data)
         }
     }
 
     private func saveFavorites() {
-        UserDefaults.standard.set(Array(favorites), forKey: "favorites")
+        UserDefaults.standard.set(Array(favorites), forKey: StorageKey.favorites)
     }
 
     // MARK: - Update Methods

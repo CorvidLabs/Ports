@@ -91,19 +91,23 @@ public actor UpdateChecker {
     }
 
     /// Open the releases page in browser.
-    public func openReleasesPage() {
-        let urlString = "https://github.com/\(repoOwner)/\(repoName)/releases"
+    public func openReleasesPage() async {
+        let urlString = "https://github.com/CorvidLabs/Ports/releases"
         if let url = URL(string: urlString) {
-            NSWorkspace.shared.open(url)
+            _ = await MainActor.run {
+                NSWorkspace.shared.open(url)
+            }
         }
     }
 
     /// Open a specific release download.
-    public func openDownload(_ release: Release) {
-        if let downloadURL = release.downloadURL {
-            NSWorkspace.shared.open(downloadURL)
-        } else {
-            NSWorkspace.shared.open(release.htmlURL)
+    public func openDownload(_ release: Release) async {
+        _ = await MainActor.run {
+            if let downloadURL = release.downloadURL {
+                NSWorkspace.shared.open(downloadURL)
+            } else {
+                NSWorkspace.shared.open(release.htmlURL)
+            }
         }
     }
 

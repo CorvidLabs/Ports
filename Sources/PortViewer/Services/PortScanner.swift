@@ -49,7 +49,7 @@ public actor PortScanner {
         }
 
         return await withCheckedContinuation { continuation in
-            process.terminationHandler = { _ in
+            process.terminationHandler = { @Sendable _ in
                 let data = pipe.fileHandleForReading.readDataToEndOfFile()
                 let output = String(data: data, encoding: .utf8) ?? ""
                 continuation.resume(returning: output)

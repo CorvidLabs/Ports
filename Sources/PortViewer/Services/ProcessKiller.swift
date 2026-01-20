@@ -54,7 +54,7 @@ public actor ProcessKiller {
         }
 
         return try await withCheckedThrowingContinuation { continuation in
-            process.terminationHandler = { terminatedProcess in
+            process.terminationHandler = { @Sendable terminatedProcess in
                 let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
                 let errorOutput = String(data: errorData, encoding: .utf8) ?? ""
 

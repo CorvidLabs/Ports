@@ -23,7 +23,7 @@ struct PortDetailView: View {
             HStack(spacing: 8) {
                 Image(systemName: port.category.icon)
                     .font(.title2)
-                    .foregroundStyle(categoryColor)
+                    .foregroundStyle(port.category.color)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(port.processName)
@@ -161,8 +161,8 @@ struct PortDetailView: View {
         .font(.caption)
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
-        .background(riskColor.opacity(0.15))
-        .foregroundStyle(riskColor)
+        .background(port.risk.color.opacity(0.15))
+        .foregroundStyle(port.risk.color)
         .clipShape(Capsule())
     }
 
@@ -171,30 +171,6 @@ struct PortDetailView: View {
             .font(monoSmall)
             .foregroundStyle(.secondary)
             .frame(width: 80, alignment: .trailing)
-    }
-
-    // MARK: - Colors
-
-    private var categoryColor: Color {
-        switch port.category {
-        case .dev: return .orange
-        case .web: return .blue
-        case .database: return .green
-        case .media: return .purple
-        case .gaming: return .pink
-        case .comms: return .cyan
-        case .macos: return .gray
-        case .other: return .secondary
-        }
-    }
-
-    private var riskColor: Color {
-        switch port.risk {
-        case .safe: return .green
-        case .normal: return .blue
-        case .attention: return .orange
-        case .unknown: return .secondary
-        }
     }
 
     // MARK: - Helpers

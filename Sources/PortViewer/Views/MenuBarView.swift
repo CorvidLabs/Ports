@@ -178,7 +178,7 @@ struct MenuBarView: View {
                         sectionHeader(
                             icon: group.category.icon,
                             label: group.category.label,
-                            color: categoryColor(group.category)
+                            color: group.category.color
                         )
                     }
                 }
@@ -208,7 +208,7 @@ struct MenuBarView: View {
             // Risk indicator - simple colored dot
             Text("●")
                 .font(.system(size: 8))
-                .foregroundStyle(riskColor(port.risk))
+                .foregroundStyle(port.risk.color)
                 .frame(width: 16)
                 .help(riskDescription(port))
 
@@ -413,28 +413,6 @@ struct MenuBarView: View {
     }
 
     // MARK: - Helpers
-
-    private func categoryColor(_ category: PortInfo.Category) -> Color {
-        switch category {
-        case .dev: return .orange
-        case .web: return .blue
-        case .database: return .green
-        case .media: return .purple
-        case .gaming: return .pink
-        case .comms: return .cyan
-        case .macos: return .gray
-        case .other: return .secondary
-        }
-    }
-
-    private func riskColor(_ risk: PortInfo.Risk) -> Color {
-        switch risk {
-        case .safe: return .green
-        case .normal: return .blue
-        case .attention: return .orange
-        case .unknown: return .secondary
-        }
-    }
 
     private func riskDescription(_ port: PortInfo) -> String {
         var parts: [String] = []

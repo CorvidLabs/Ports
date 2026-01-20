@@ -1,15 +1,20 @@
 import Foundation
+import SwiftUI
 
 /// Represents information about an open network port.
 public struct PortInfo: Identifiable, Sendable, Hashable {
 
-    // MARK: - Types
+    // MARK: - Transport
 
+    /// Network transport protocol.
     public enum Transport: String, Sendable, CaseIterable {
         case tcp = "TCP"
         case udp = "UDP"
     }
 
+    // MARK: - Category
+
+    /// Port category based on process type.
     public enum Category: String, Sendable, CaseIterable {
         case macos = "macos"
         case dev = "dev"
@@ -58,8 +63,25 @@ public struct PortInfo: Identifiable, Sendable, Hashable {
             case .other: return 7
             }
         }
+
+        /// Display color for the category.
+        public var color: Color {
+            switch self {
+            case .dev: return .orange
+            case .web: return .blue
+            case .database: return .green
+            case .media: return .purple
+            case .gaming: return .pink
+            case .comms: return .cyan
+            case .macos: return .gray
+            case .other: return .secondary
+            }
+        }
     }
 
+    // MARK: - Risk
+
+    /// Risk assessment level for a port.
     public enum Risk: String, Sendable {
         case safe = "safe"          // Known system service, localhost only
         case normal = "normal"      // Expected for category, known process
@@ -74,8 +96,21 @@ public struct PortInfo: Identifiable, Sendable, Hashable {
             case .unknown: return "questionmark.shield.fill"
             }
         }
+
+        /// Display color for the risk level.
+        public var color: Color {
+            switch self {
+            case .safe: return .green
+            case .normal: return .blue
+            case .attention: return .orange
+            case .unknown: return .secondary
+            }
+        }
     }
 
+    // MARK: - State
+
+    /// TCP connection state.
     public enum State: String, Sendable {
         case listen = "LISTEN"
         case established = "ESTABLISHED"
