@@ -3,7 +3,7 @@
 A lightweight macOS menu bar app for viewing and managing open network ports.
 
 [![macOS 13+](https://img.shields.io/badge/macOS-13%2B-blue?style=flat-square)](https://www.apple.com/macos/)
-[![Swift 5.9+](https://img.shields.io/badge/Swift-5.9%2B-F05138?style=flat-square&logo=swift&logoColor=white)](https://swift.org)
+[![Swift 6.0+](https://img.shields.io/badge/Swift-6.0%2B-F05138?style=flat-square&logo=swift&logoColor=white)](https://swift.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 [![Release](https://img.shields.io/github/v/release/CorvidLabs/Ports?style=flat-square&include_prereleases)](https://github.com/CorvidLabs/Ports/releases)
 
@@ -103,7 +103,7 @@ swift build && swift run PortViewer
 ### Requirements
 
 - macOS 13.0+
-- Swift 5.9+
+- Swift 6.0+
 - Xcode Command Line Tools
 
 ### Building

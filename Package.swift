@@ -1,4 +1,4 @@
-// swift-tools-version: 5.9
+// swift-tools-version: 6.0
 
 import PackageDescription
 
@@ -13,18 +13,12 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "PortViewer",
-            path: "Sources/PortViewer",
-            swiftSettings: [
-                .enableExperimentalFeature("StrictConcurrency")
-            ]
+            path: "Sources/PortViewer"
         ),
         .testTarget(
             name: "PortViewerTests",
             dependencies: ["PortViewer"],
-            path: "Tests/PortViewerTests",
-            swiftSettings: [
-                .enableExperimentalFeature("StrictConcurrency")
-            ]
+            path: "Tests/PortViewerTests"
         )
     ]
 )
