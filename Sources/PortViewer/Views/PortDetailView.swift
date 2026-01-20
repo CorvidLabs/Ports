@@ -11,9 +11,9 @@ struct PortDetailView: View {
     let onToggleFavorite: () -> Void
     let isFavorite: Bool
 
-    private let mono = Font.system(.body, design: .monospaced)
-    private let monoSmall = Font.system(.caption, design: .monospaced)
-    private let accent = Color(red: 0.4, green: 0.9, blue: 0.6)
+    private let mono = Theme.mono
+    private let monoSmall = Theme.monoSmall
+    private let accent = Theme.accent
 
     // MARK: - Body
 

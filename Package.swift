@@ -17,6 +17,14 @@ let package = Package(
             swiftSettings: [
                 .enableExperimentalFeature("StrictConcurrency")
             ]
+        ),
+        .testTarget(
+            name: "PortViewerTests",
+            dependencies: ["PortViewer"],
+            path: "Tests/PortViewerTests",
+            swiftSettings: [
+                .enableExperimentalFeature("StrictConcurrency")
+            ]
         )
     ]
 )

@@ -51,7 +51,7 @@ public actor UpdateChecker {
     public func checkForUpdates() async throws -> Release? {
         let latestRelease = try await fetchLatestRelease()
 
-        if isNewerVersion(latestRelease.version, than: currentVersion) {
+        if VersionComparator.isNewer(latestRelease.version, than: currentVersion) {
             return latestRelease
         }
 
@@ -153,30 +153,4 @@ public actor UpdateChecker {
         )
     }
 
-    private func isNewerVersion(_ new: String, than current: String) -> Bool {
-        let newParts = parseVersion(new)
-        let currentParts = parseVersion(current)
-
-        for i in 0..<max(newParts.count, currentParts.count) {
-            let newPart = i < newParts.count ? newParts[i] : 0
-            let currentPart = i < currentParts.count ? currentParts[i] : 0
-
-            if newPart > currentPart {
-                return true
-            } else if newPart < currentPart {
-                return false
-            }
-        }
-
-        return false
-    }
-
-    private func parseVersion(_ version: String) -> [Int] {
-        let cleanVersion = version
-            .replacingOccurrences(of: "-alpha", with: "")
-            .replacingOccurrences(of: "-beta", with: "")
-            .replacingOccurrences(of: "-rc", with: "")
-
-        return cleanVersion.split(separator: ".").compactMap { Int($0) }
-    }
 }

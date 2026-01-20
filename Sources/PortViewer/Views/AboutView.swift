@@ -8,7 +8,7 @@ struct AboutView: View {
     @EnvironmentObject private var appState: AppState
     @State private var currentVersion = "..."
 
-    private let accent = Color(red: 0.4, green: 0.9, blue: 0.6)
+    private let accent = Theme.accent
 
     // MARK: - URLs
 
