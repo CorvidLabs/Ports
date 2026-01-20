@@ -7,6 +7,8 @@ struct MenuBarView: View {
 
     @EnvironmentObject private var appState: AppState
     @State private var hoveredPort: PortInfo.ID?
+    @State private var selectedPort: PortInfo?
+    @FocusState private var isSearchFocused: Bool
 
     private let mono = Font.system(.body, design: .monospaced)
     private let monoSmall = Font.system(.caption, design: .monospaced)
@@ -43,6 +45,19 @@ struct MenuBarView: View {
         }
         .frame(width: 360)
         .background(Color(nsColor: .windowBackgroundColor))
+        .background {
+            // Hidden buttons for keyboard shortcuts
+            VStack {
+                Button("Refresh") { Task { await appState.refresh() } }
+                    .keyboardShortcut("r", modifiers: .command)
+                Button("Search") { isSearchFocused = true }
+                    .keyboardShortcut("f", modifiers: .command)
+                Button("Clear") { appState.searchText = "" }
+                    .keyboardShortcut(.escape, modifiers: [])
+            }
+            .opacity(0)
+            .allowsHitTesting(false)
+        }
     }
 
     // MARK: - Header
@@ -92,6 +107,7 @@ struct MenuBarView: View {
             TextField("filter...", text: $appState.searchText)
                 .textFieldStyle(.plain)
                 .font(mono)
+                .focused($isSearchFocused)
 
             if !appState.searchText.isEmpty {
                 Button(action: { appState.searchText = "" }) {
@@ -253,6 +269,29 @@ struct MenuBarView: View {
         .background(hoveredPort == port.id ? Color.primary.opacity(0.06) : Color.clear)
         .contentShape(Rectangle())
         .onHover { hoveredPort = $0 ? port.id : nil }
+        .onTapGesture { selectedPort = port }
+        .popover(isPresented: Binding(
+            get: { selectedPort?.id == port.id },
+            set: { if !$0 { selectedPort = nil } }
+        ), arrowEdge: .trailing) {
+            PortDetailView(
+                port: port,
+                onKill: {
+                    Task {
+                        _ = await appState.killProcess(port)
+                        selectedPort = nil
+                    }
+                },
+                onForceKill: {
+                    Task {
+                        _ = await appState.killProcess(port, force: true)
+                        selectedPort = nil
+                    }
+                },
+                onToggleFavorite: { appState.toggleFavorite(port.port) },
+                isFavorite: appState.isFavorite(port.port)
+            )
+        }
         .contextMenu {
             Section {
                 Label("Port: \(port.port)", systemImage: "number")
@@ -344,9 +383,13 @@ struct MenuBarView: View {
 
             Spacer()
 
-            Text("v0.1.0")
-                .font(monoTiny)
-                .foregroundStyle(.quaternary)
+            Button(action: { openSettings() }) {
+                Image(systemName: "gear")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+            .help("Settings")
 
             Button(action: { NSApplication.shared.terminate(nil) }) {
                 Text("quit")
@@ -357,6 +400,10 @@ struct MenuBarView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
+    }
+
+    private func openSettings() {
+        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
     }
 
     // MARK: - Helpers

@@ -50,6 +50,7 @@ final class AppState: ObservableObject {
     internal let scanner = PortScanner()
     internal let killer = ProcessKiller()
     internal let updateChecker = UpdateChecker()
+    internal var launchAtLogin = LaunchAtLogin()
 
     // MARK: - Computed Properties
 
