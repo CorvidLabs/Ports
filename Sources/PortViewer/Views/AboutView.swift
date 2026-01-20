@@ -10,6 +10,12 @@ struct AboutView: View {
 
     private let accent = Color(red: 0.4, green: 0.9, blue: 0.6)
 
+    // MARK: - URLs
+
+    private static let repoURL = URL(string: "https://github.com/CorvidLabs/Ports")
+    private static let issuesURL = URL(string: "https://github.com/CorvidLabs/Ports/issues")
+    private static let releasesURL = URL(string: "https://github.com/CorvidLabs/Ports/releases")
+
     // MARK: - Body
 
     var body: some View {
@@ -45,19 +51,25 @@ struct AboutView: View {
 
             // Links
             VStack(spacing: 8) {
-                Link(destination: URL(string: "https://github.com/CorvidLabs/Ports")!) {
-                    Label("GitHub Repository", systemImage: "link")
-                        .font(.system(.caption, design: .monospaced))
+                if let url = Self.repoURL {
+                    Link(destination: url) {
+                        Label("GitHub Repository", systemImage: "link")
+                            .font(.system(.caption, design: .monospaced))
+                    }
                 }
 
-                Link(destination: URL(string: "https://github.com/CorvidLabs/Ports/issues")!) {
-                    Label("Report an Issue", systemImage: "exclamationmark.bubble")
-                        .font(.system(.caption, design: .monospaced))
+                if let url = Self.issuesURL {
+                    Link(destination: url) {
+                        Label("Report an Issue", systemImage: "exclamationmark.bubble")
+                            .font(.system(.caption, design: .monospaced))
+                    }
                 }
 
-                Link(destination: URL(string: "https://github.com/CorvidLabs/Ports/releases")!) {
-                    Label("Release Notes", systemImage: "doc.text")
-                        .font(.system(.caption, design: .monospaced))
+                if let url = Self.releasesURL {
+                    Link(destination: url) {
+                        Label("Release Notes", systemImage: "doc.text")
+                            .font(.system(.caption, design: .monospaced))
+                    }
                 }
             }
 

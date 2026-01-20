@@ -36,7 +36,10 @@ public actor UpdateChecker {
 
     private let repoOwner = "CorvidLabs"
     private let repoName = "Ports"
-    private let currentVersion = "0.1.0-alpha"
+
+    private var currentVersion: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.0.0"
+    }
 
     // MARK: - Initializers
 
