@@ -14,42 +14,25 @@ A lightweight macOS menu bar app for viewing and managing open network ports.
 - **One-click kill** - Terminate processes directly from the menu
 - **Pin favorites** - Quick access to important ports
 - **Search/filter** - Find ports by name or number
+- **Auto-updates** - Notifies when new versions are available
 
 ## Installation
 
-### Download (Recommended)
+### Download
 
-Download the latest DMG from [Releases](../../releases).
-
-**After installing, run this command to allow the app:**
-```bash
-xattr -cr /Applications/Ports.app
-```
-
-Then open Ports from Applications (or right-click → Open).
-
-> The app is not notarized, so macOS quarantines it. The command above removes the quarantine flag.
+Download the latest DMG from [Releases](../../releases), open it, and drag **Ports** to **Applications**.
 
 ### Build from Source
-
-Requires macOS 13+ and Swift 5.9+.
 
 ```bash
 git clone https://github.com/CorvidLabs/Ports.git
 cd Ports
-swift build -c release
-```
 
-The built app will be at `.build/release/PortViewer`.
+# Quick build and run
+swift build && swift run PortViewer
 
-To create an app bundle:
-
-```bash
-# Build release
-swift build -c release
-
-# Run directly
-.build/release/PortViewer
+# Or build release DMG
+./scripts/build-release.sh 0.3.0
 ```
 
 ## Usage
@@ -83,14 +66,17 @@ swift build -c release
 ## Development
 
 ```bash
-# Build debug
-swift build
-
-# Run
+# Run in debug mode
 swift run PortViewer
 
 # Build release
 swift build -c release
+
+# Build DMG locally
+./scripts/build-release.sh 0.3.0
+
+# Build with signing (requires Developer ID)
+./scripts/build-release.sh 0.3.0 "Developer ID Application: YourName (TEAMID)"
 ```
 
 ## License
