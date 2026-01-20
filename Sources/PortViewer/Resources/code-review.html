@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Review - Ports v0.4.0-alpha | 0xLeif</title>
+    <style>
+        :root {
+            --bg: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --border: #30363d;
+            --text: #e6edf3;
+            --text-secondary: #8b949e;
+            --accent: #66e6a0;
+            --accent-dim: rgba(102, 230, 160, 0.15);
+            --success: #3fb950;
+            --warning: #d29922;
+            --mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .reviewer {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), #4a9eff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--bg);
+            font-family: var(--mono);
+        }
+
+        .reviewer-info h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .reviewer-info p {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .meta {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1.5rem;
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .meta-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+        }
+
+        .meta-value {
+            font-family: var(--mono);
+            font-size: 0.875rem;
+            color: var(--accent);
+        }
+
+        .score-container {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+            text-align: center;
+        }
+
+        .score {
+            font-size: 4rem;
+            font-weight: 700;
+            font-family: var(--mono);
+            color: var(--accent);
+            line-height: 1;
+        }
+
+        .score span {
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+        }
+
+        .verdict {
+            margin-top: 1rem;
+            font-size: 1.5rem;
+            color: var(--success);
+            font-weight: 600;
+            font-family: var(--mono);
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 2rem 0 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .checklist {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .checklist-item:last-child {
+            border-bottom: none;
+        }
+
+        .checklist-item .label {
+            font-family: var(--mono);
+            font-size: 0.875rem;
+        }
+
+        .check {
+            color: var(--success);
+            font-size: 1.25rem;
+        }
+
+        .scores-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .score-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .score-card .category {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .score-card .value {
+            font-family: var(--mono);
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .section h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--accent);
+        }
+
+        .section ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .section li {
+            padding: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .section li::before {
+            content: ">";
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            font-family: var(--mono);
+        }
+
+        code {
+            font-family: var(--mono);
+            background: var(--bg-tertiary);
+            padding: 0.125rem 0.375rem;
+            border-radius: 4px;
+            font-size: 0.8125rem;
+        }
+
+        .file-tree {
+            font-family: var(--mono);
+            font-size: 0.8125rem;
+            background: var(--bg-tertiary);
+            padding: 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            white-space: pre;
+            color: var(--text-secondary);
+        }
+
+        .file-tree .dir {
+            color: var(--accent);
+        }
+
+        .file-tree .count {
+            color: var(--text-secondary);
+            opacity: 0.7;
+        }
+
+        footer {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-success {
+            background: rgba(63, 185, 80, 0.15);
+            color: var(--success);
+        }
+
+        .signature {
+            margin-top: 2rem;
+            font-family: var(--mono);
+            font-size: 2.5rem;
+            color: var(--accent);
+            opacity: 0.3;
+        }
+
+        .architecture {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        @media (max-width: 600px) {
+            .architecture {
+                grid-template-columns: 1fr;
+            }
+            .meta {
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="reviewer">
+            <div class="avatar">0x</div>
+            <div class="reviewer-info">
+                <h1>0xLeif</h1>
+                <p>Code Review - Final</p>
+            </div>
+        </div>
+        <div class="meta">
+            <div class="meta-item">
+                <span class="meta-label">Repository</span>
+                <span class="meta-value">CorvidLabs/Ports</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">Version</span>
+                <span class="meta-value">v0.4.0-alpha</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">Date</span>
+                <span class="meta-value">2026-01-20</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">CI</span>
+                <span class="badge badge-success">Passing</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">Status</span>
+                <span class="badge badge-success">Approved</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="score-container">
+        <div class="score">100<span>/100</span></div>
+        <div class="verdict">Ship it.</div>
+    </div>
+
+    <h2>Checklist</h2>
+    <div class="checklist">
+        <div class="checklist-item">
+            <span class="label">No force unwraps (<code>!</code>, <code>try!</code>, <code>as!</code>)</span>
+            <span class="check">&#10003;</span>
+        </div>
+        <div class="checklist-item">
+            <span class="label">No <code>internal</code> keyword</span>
+            <span class="check">&#10003;</span>
+        </div>
+        <div class="checklist-item">
+            <span class="label">K&R brace style</span>
+            <span class="check">&#10003;</span>
+        </div>
+        <div class="checklist-item">
+            <span class="label">Strict concurrency enabled</span>
+            <span class="check">&#10003;</span>
+        </div>
+        <div class="checklist-item">
+            <span class="label"><code>@Sendable</code> on closure boundaries</span>
+            <span class="check">&#10003;</span>
+        </div>
+        <div class="checklist-item">
+            <span class="label">MARK sections</span>
+            <span class="check">&#10003;</span>
+        </div>
+        <div class="checklist-item">
+            <span class="label"><code>LocalizedError</code> conformance</span>
+            <span class="check">&#10003;</span>
+        </div>
+        <div class="checklist-item">
+            <span class="label">Shared theme (no duplicates)</span>
+            <span class="check">&#10003;</span>
+        </div>
+        <div class="checklist-item">
+            <span class="label">Test coverage (47 tests)</span>
+            <span class="check">&#10003;</span>
+        </div>
+        <div class="checklist-item">
+            <span class="label">CI runs tests</span>
+            <span class="check">&#10003;</span>
+        </div>
+        <div class="checklist-item">
+            <span class="label">CI passing (Swift 6.0)</span>
+            <span class="check">&#10003;</span>
+        </div>
+    </div>
+
+    <h2>Scores</h2>
+    <div class="scores-grid">
+        <div class="score-card">
+            <div class="category">Code Quality</div>
+            <div class="value">10/10</div>
+        </div>
+        <div class="score-card">
+            <div class="category">Architecture</div>
+            <div class="value">10/10</div>
+        </div>
+        <div class="score-card">
+            <div class="category">Documentation</div>
+            <div class="value">10/10</div>
+        </div>
+        <div class="score-card">
+            <div class="category">Test Coverage</div>
+            <div class="value">10/10</div>
+        </div>
+        <div class="score-card">
+            <div class="category">CI/CD</div>
+            <div class="value">10/10</div>
+        </div>
+    </div>
+
+    <h2>Test Suite</h2>
+    <div class="section">
+        <h3>47 Tests Passing</h3>
+        <div class="file-tree"><span class="dir">Tests/PortViewerTests/</span>
+├── <span class="dir">PortInfoTests.swift</span> <span class="count">(27 tests)</span>
+│   ├── Category Detection <span class="count">(10 tests)</span>
+│   ├── Risk Assessment <span class="count">(5 tests)</span>
+│   ├── Exposure Detection <span class="count">(4 tests)</span>
+│   ├── Privileged Ports <span class="count">(5 tests)</span>
+│   └── State Parsing <span class="count">(4 tests)</span>
+└── <span class="dir">VersionComparatorTests.swift</span> <span class="count">(20 tests)</span>
+    ├── Version Parsing <span class="count">(9 tests)</span>
+    └── Version Comparison <span class="count">(11 tests)</span></div>
+    </div>
+
+    <h2>Architecture</h2>
+    <div class="architecture">
+        <div class="section">
+            <h3>Services (Actors)</h3>
+            <ul>
+                <li><code>PortScanner</code> - lsof parsing</li>
+                <li><code>ProcessKiller</code> - process termination</li>
+                <li><code>UpdateChecker</code> - GitHub releases</li>
+            </ul>
+        </div>
+        <div class="section">
+            <h3>Utilities</h3>
+            <ul>
+                <li><code>VersionComparator</code> - semver logic</li>
+                <li><code>Theme</code> - shared constants</li>
+                <li><code>LaunchAtLogin</code> - login items</li>
+            </ul>
+        </div>
+    </div>
+
+    <h2>Highlights</h2>
+    <div class="section">
+        <h3>What's Done Well</h3>
+        <ul>
+            <li><code>@Sendable</code> on Process <code>terminationHandler</code> closures</li>
+            <li><code>MainActor.run</code> for NSWorkspace calls from actors</li>
+            <li>Color properties on <code>PortInfo.Category</code> and <code>PortInfo.Risk</code></li>
+            <li>Safe URL handling with optional binding</li>
+            <li>Comprehensive README with usage examples</li>
+            <li>Version parsing handles prerelease suffixes correctly</li>
+            <li>Pure async/await - zero completion handlers</li>
+            <li>Proper error types with <code>LocalizedError</code></li>
+        </ul>
+    </div>
+
+    <h2>Project Structure</h2>
+    <div class="section">
+        <div class="file-tree"><span class="dir">Sources/PortViewer/</span>
+├── App.swift
+├── Theme.swift
+├── <span class="dir">Models/</span>
+│   └── PortInfo.swift
+├── <span class="dir">Services/</span>
+│   ├── LaunchAtLogin.swift
+│   ├── PortScanner.swift
+│   ├── ProcessKiller.swift
+│   ├── UpdateChecker.swift
+│   └── VersionComparator.swift
+└── <span class="dir">Views/</span>
+    ├── AboutView.swift
+    ├── MenuBarView.swift
+    ├── PortDetailView.swift
+    └── SettingsView.swift</div>
+    </div>
+
+    <footer>
+        <p>
+            <a href="https://github.com/CorvidLabs/Ports">CorvidLabs/Ports</a> &middot;
+            Ready for public release
+        </p>
+        <div class="signature">0xLeif</div>
+    </footer>
+</body>
+</html>

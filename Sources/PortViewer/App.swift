@@ -28,6 +28,12 @@ struct PortViewerApp: App {
         }
         .windowResizability(.contentSize)
         .defaultPosition(.center)
+
+        Window("Code Review", id: "code-review") {
+            CodeReviewView()
+        }
+        .windowResizability(.contentSize)
+        .defaultPosition(.center)
     }
 }
 

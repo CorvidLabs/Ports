@@ -14,6 +14,9 @@ let package = Package(
         .executableTarget(
             name: "PortViewer",
             path: "Sources/PortViewer",
+            resources: [
+                .copy("Resources/code-review.html")
+            ],
             swiftSettings: [
                 .enableExperimentalFeature("StrictConcurrency")
             ]
