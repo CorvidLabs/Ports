@@ -386,6 +386,14 @@ struct MenuBarView: View {
 
             Spacer()
 
+            Button(action: { openMainWindow() }) {
+                Image(systemName: "macwindow")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+            .help("Open in Window (⌘0)")
+
             Button(action: { openSettings() }) {
                 Image(systemName: "gear")
                     .font(.caption)
@@ -406,6 +414,11 @@ struct MenuBarView: View {
     }
 
     // MARK: - Actions
+
+    private func openMainWindow() {
+        NSApp.activate(ignoringOtherApps: true)
+        openWindow(id: "main")
+    }
 
     private func openSettings() {
         NSApp.activate(ignoringOtherApps: true)

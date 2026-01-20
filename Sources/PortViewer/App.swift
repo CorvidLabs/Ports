@@ -22,6 +22,15 @@ struct PortViewerApp: App {
         }
         .menuBarExtraStyle(.window)
 
+        Window("Ports", id: "main") {
+            MenuBarView()
+                .environmentObject(appState)
+                .frame(minWidth: 400, minHeight: 500)
+        }
+        .windowResizability(.contentSize)
+        .defaultPosition(.center)
+        .keyboardShortcut("0", modifiers: .command)
+
         Window("Settings", id: "settings") {
             SettingsView()
                 .environmentObject(appState)
