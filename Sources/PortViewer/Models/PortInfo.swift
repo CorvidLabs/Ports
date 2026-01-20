@@ -293,11 +293,9 @@ public struct PortInfo: Identifiable, Sendable, Hashable {
     /// Human-readable exposure description
     public var exposureLabel: String {
         if isLocalOnly {
-            return "local"
-        } else if localAddress.contains("*") || localAddress.contains("0.0.0.0") {
-            return "all interfaces"
+            return "127"
         } else {
-            return "network"
+            return "*"
         }
     }
 

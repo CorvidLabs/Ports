@@ -6,6 +6,7 @@ struct MenuBarView: View {
     // MARK: - Properties
 
     @EnvironmentObject private var appState: AppState
+    @Environment(\.openWindow) private var openWindow
     @State private var hoveredPort: PortInfo.ID?
     @State private var selectedPort: PortInfo?
     @FocusState private var isSearchFocused: Bool
@@ -187,86 +188,82 @@ struct MenuBarView: View {
     }
 
     private func sectionHeader(icon: String, label: String, color: Color) -> some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 5) {
             Image(systemName: icon)
-                .font(.caption2)
+                .font(.system(size: 9))
                 .foregroundStyle(color)
             Text(label)
-                .font(monoSmall)
+                .font(.system(.caption2, design: .monospaced, weight: .medium))
                 .foregroundStyle(.secondary)
+                .textCase(.uppercase)
             Spacer()
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 6)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 4)
         .background(Color(nsColor: .windowBackgroundColor).opacity(0.95))
     }
 
     private func portRow(_ port: PortInfo) -> some View {
-        HStack(spacing: 6) {
-            // Risk indicator
-            Image(systemName: port.risk.icon)
-                .font(.caption2)
+        HStack(spacing: 0) {
+            // Risk indicator - simple colored dot
+            Text("●")
+                .font(.system(size: 8))
                 .foregroundStyle(riskColor(port.risk))
-                .frame(width: 14)
+                .frame(width: 16)
                 .help(riskDescription(port))
 
             // Port number
             Text(String(format: "%5d", port.port))
-                .font(.system(.callout, design: .monospaced, weight: .semibold))
+                .font(.system(.callout, design: .monospaced, weight: .medium))
                 .foregroundStyle(accent)
 
             // Protocol
             Text(port.transport == .tcp ? "tcp" : "udp")
                 .font(monoTiny)
                 .foregroundStyle(port.transport == .tcp ? .cyan : .orange)
-                .frame(width: 24)
+                .frame(width: 28)
 
             // Process name
-            VStack(alignment: .leading, spacing: 0) {
-                Text(port.processName)
-                    .font(.system(.callout, design: .monospaced))
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
+            Text(port.processName)
+                .font(monoSmall)
+                .foregroundStyle(.primary)
+                .lineLimit(1)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
-                HStack(spacing: 4) {
-                    // Exposure indicator
-                    Image(systemName: port.isLocalOnly ? "lock.fill" : "network")
-                        .font(.system(size: 8))
-                    Text(port.exposureLabel)
-                        .font(monoTiny)
+            // Exposure: * = network, 127 = local
+            Text(port.exposureLabel)
+                .font(.system(.caption, design: .monospaced, weight: .medium))
+                .foregroundStyle(port.isLocalOnly ? .green : .orange)
+                .frame(width: 28, alignment: .trailing)
 
-                    Text("·")
-                        .foregroundStyle(.quaternary)
-
-                    Text("pid \(port.pid)")
-                        .font(monoTiny)
-                }
+            // PID
+            Text(String(port.pid))
+                .font(monoTiny)
                 .foregroundStyle(.tertiary)
-            }
-
-            Spacer()
+                .frame(width: 50, alignment: .trailing)
 
             // Actions on hover
-            HStack(spacing: 4) {
+            HStack(spacing: 6) {
                 Button(action: { appState.toggleFavorite(port.port) }) {
                     Image(systemName: appState.isFavorite(port.port) ? "star.fill" : "star")
-                        .font(.caption2)
-                        .foregroundStyle(appState.isFavorite(port.port) ? .yellow : .secondary)
+                        .font(.system(size: 10))
+                        .foregroundStyle(appState.isFavorite(port.port) ? .yellow : .secondary.opacity(0.5))
                 }
                 .buttonStyle(.plain)
 
                 Button(action: { Task { await appState.killProcess(port) } }) {
-                    Text("kill")
-                        .font(monoTiny)
-                        .foregroundStyle(.red.opacity(0.9))
+                    Text("×")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(.red.opacity(0.8))
                 }
                 .buttonStyle(.plain)
             }
+            .frame(width: 44)
             .opacity(hoveredPort == port.id ? 1 : 0)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 6)
-        .background(hoveredPort == port.id ? Color.primary.opacity(0.06) : Color.clear)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 5)
+        .background(hoveredPort == port.id ? Color.primary.opacity(0.05) : Color.clear)
         .contentShape(Rectangle())
         .onHover { hoveredPort = $0 ? port.id : nil }
         .onTapGesture { selectedPort = port }
@@ -293,12 +290,8 @@ struct MenuBarView: View {
             )
         }
         .contextMenu {
-            Section {
-                Label("Port: \(port.port)", systemImage: "number")
-                Label("PID: \(port.pid)", systemImage: "memorychip")
-                Label("User: \(port.user)", systemImage: "person")
-                Label(port.exposureLabel, systemImage: port.isLocalOnly ? "lock.fill" : "network")
-            }
+            Text("\(port.processName) :\(port.port)")
+                .font(.system(.caption, design: .monospaced))
 
             Divider()
 
@@ -314,17 +307,17 @@ struct MenuBarView: View {
 
             Divider()
 
-            Button(appState.isFavorite(port.port) ? "Unpin" : "Pin to Top") {
+            Button(appState.isFavorite(port.port) ? "Unpin" : "Pin") {
                 appState.toggleFavorite(port.port)
             }
 
             Divider()
 
-            Button("Kill (SIGTERM)", role: .destructive) {
+            Button("Kill", role: .destructive) {
                 Task { await appState.killProcess(port) }
             }
 
-            Button("Force Kill (SIGKILL)", role: .destructive) {
+            Button("Force Kill", role: .destructive) {
                 Task { await appState.killProcess(port, force: true) }
             }
         }
@@ -373,13 +366,23 @@ struct MenuBarView: View {
     // MARK: - Footer
 
     private var footerView: some View {
-        HStack {
-            Toggle(isOn: $appState.showOnlyListening) {
-                Text("listen only")
-                    .font(monoSmall)
+        HStack(spacing: 12) {
+            // Legend
+            HStack(spacing: 8) {
+                HStack(spacing: 2) {
+                    Text("127")
+                        .foregroundStyle(.green)
+                    Text("local")
+                        .foregroundStyle(.quaternary)
+                }
+                HStack(spacing: 2) {
+                    Text("*")
+                        .foregroundStyle(.orange)
+                    Text("network")
+                        .foregroundStyle(.quaternary)
+                }
             }
-            .toggleStyle(.checkbox)
-            .controlSize(.small)
+            .font(monoTiny)
 
             Spacer()
 
@@ -389,7 +392,7 @@ struct MenuBarView: View {
                     .foregroundStyle(.secondary)
             }
             .buttonStyle(.plain)
-            .help("Settings")
+            .help("Settings (⌘,)")
 
             Button(action: { NSApplication.shared.terminate(nil) }) {
                 Text("quit")
@@ -398,12 +401,15 @@ struct MenuBarView: View {
             }
             .buttonStyle(.plain)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
     }
 
+    // MARK: - Actions
+
     private func openSettings() {
-        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+        NSApp.activate(ignoringOtherApps: true)
+        openWindow(id: "settings")
     }
 
     // MARK: - Helpers

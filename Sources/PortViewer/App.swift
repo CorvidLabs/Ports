@@ -22,10 +22,12 @@ struct PortViewerApp: App {
         }
         .menuBarExtraStyle(.window)
 
-        Settings {
+        Window("Settings", id: "settings") {
             SettingsView()
                 .environmentObject(appState)
         }
+        .windowResizability(.contentSize)
+        .defaultPosition(.center)
     }
 }
 
