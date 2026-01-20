@@ -37,6 +37,29 @@ jobs:
       - name: Build Release
         run: swift build -c release
 
+      - name: Import Certificate
+        env:
+          APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          # Create temporary keychain
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
+
+          # Create keychain
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+          # Import certificate
+          echo "$APPLE_CERTIFICATE_BASE64" | base64 --decode > $RUNNER_TEMP/certificate.p12
+          security import $RUNNER_TEMP/certificate.p12 -P "$APPLE_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security list-keychain -d user -s $KEYCHAIN_PATH
+
+          # Clean up
+          rm $RUNNER_TEMP/certificate.p12
+
       - name: Create App Bundle
         run: |
           VERSION="${{ steps.version.outputs.version }}"
@@ -45,9 +68,6 @@ jobs:
           mkdir -p Ports.app/Contents/Resources
           cp .build/release/PortViewer Ports.app/Contents/MacOS/Ports
           chmod +x Ports.app/Contents/MacOS/Ports
-
-          # Remove quarantine attributes
-          xattr -cr Ports.app
 
           cat > Ports.app/Contents/Info.plist << PLIST
           <?xml version="1.0" encoding="UTF-8"?>
@@ -78,8 +98,47 @@ jobs:
           </plist>
           PLIST
 
-          # Ad-hoc sign the app (helps with Gatekeeper)
-          codesign --force --deep --sign - Ports.app
+      - name: Sign App
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          # Sign with Developer ID
+          codesign --force --options runtime --sign "Developer ID Application: CorvidLabs ($APPLE_TEAM_ID)" \
+            --timestamp \
+            Ports.app/Contents/MacOS/Ports
+
+          codesign --force --options runtime --sign "Developer ID Application: CorvidLabs ($APPLE_TEAM_ID)" \
+            --timestamp \
+            Ports.app
+
+          # Verify signature
+          codesign --verify --verbose Ports.app
+          spctl --assess --type execute --verbose Ports.app || true
+
+      - name: Notarize App
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          # Create ZIP for notarization
+          ditto -c -k --keepParent Ports.app Ports-notarize.zip
+
+          # Submit for notarization
+          xcrun notarytool submit Ports-notarize.zip \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_APP_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID" \
+            --wait
+
+          # Staple the notarization ticket
+          xcrun stapler staple Ports.app
+
+          # Verify
+          spctl --assess --type execute --verbose Ports.app
+
+          # Clean up
+          rm Ports-notarize.zip
 
       - name: Create DMG
         run: |
@@ -94,7 +153,6 @@ jobs:
           # Create DMG with nice layout
           create-dmg \
             --volname "Ports" \
-            --volicon "Ports.app/Contents/Resources/AppIcon.icns" \
             --window-pos 200 120 \
             --window-size 600 400 \
             --icon-size 100 \
@@ -106,14 +164,41 @@ jobs:
             "Ports-${{ steps.version.outputs.version }}.dmg" \
             "dmg_contents/" \
           || {
-            # Fallback if create-dmg fails (no icon, etc)
+            # Fallback if create-dmg fails
             echo "create-dmg failed, using hdiutil fallback"
             hdiutil create -volname "Ports" -srcfolder dmg_contents -ov -format UDZO "Ports-${{ steps.version.outputs.version }}.dmg"
           }
 
+      - name: Sign DMG
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          codesign --force --sign "Developer ID Application: CorvidLabs ($APPLE_TEAM_ID)" \
+            --timestamp \
+            "Ports-${{ steps.version.outputs.version }}.dmg"
+
+      - name: Notarize DMG
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          xcrun notarytool submit "Ports-${{ steps.version.outputs.version }}.dmg" \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_APP_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID" \
+            --wait
+
+          xcrun stapler staple "Ports-${{ steps.version.outputs.version }}.dmg"
+
       - name: Create ZIP
         run: |
           zip -r "Ports-${{ steps.version.outputs.version }}.zip" Ports.app
+
+      - name: Cleanup Keychain
+        if: always()
+        run: |
+          security delete-keychain $RUNNER_TEMP/app-signing.keychain-db || true
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
@@ -136,11 +221,6 @@ jobs:
             2. Open the DMG and drag **Ports** to **Applications**
             3. Launch Ports from Applications
             4. Look for the network icon in your menu bar
-
-            > **First Launch (Important):**
-            > The app is not notarized. To open it:
-            > 1. Right-click the app → Open, or
-            > 2. Run in Terminal: `xattr -cr /Applications/Ports.app`
 
             ### Features
             - Smart categorization (dev, web, database, gaming, media, comms, macos)
