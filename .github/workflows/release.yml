@@ -1,0 +1,101 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version (e.g., 0.1.0-alpha)'
+        required: true
+        default: '0.1.0-alpha'
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Swift
+        uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: '5.9'
+
+      - name: Build Release
+        run: swift build -c release
+
+      - name: Create App Bundle
+        run: |
+          mkdir -p Ports.app/Contents/MacOS
+          mkdir -p Ports.app/Contents/Resources
+          cp .build/release/PortViewer Ports.app/Contents/MacOS/Ports
+          cat > Ports.app/Contents/Info.plist << 'PLIST'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>CFBundleExecutable</key>
+              <string>Ports</string>
+              <key>CFBundleIdentifier</key>
+              <string>com.corvidlabs.ports</string>
+              <key>CFBundleName</key>
+              <string>Ports</string>
+              <key>CFBundleVersion</key>
+              <string>1.0.0</string>
+              <key>CFBundleShortVersionString</key>
+              <string>1.0.0</string>
+              <key>LSMinimumSystemVersion</key>
+              <string>13.0</string>
+              <key>LSUIElement</key>
+              <true/>
+              <key>CFBundleIconFile</key>
+              <string>AppIcon</string>
+          </dict>
+          </plist>
+          PLIST
+
+      - name: Create DMG
+        run: |
+          hdiutil create -volname "Ports" -srcfolder Ports.app -ov -format UDZO Ports.dmg
+
+      - name: Create ZIP
+        run: |
+          zip -r Ports.zip Ports.app
+
+      - name: Get Version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: Ports v${{ steps.version.outputs.version }}
+          draft: false
+          prerelease: ${{ contains(steps.version.outputs.version, 'alpha') || contains(steps.version.outputs.version, 'beta') }}
+          files: |
+            Ports.dmg
+            Ports.zip
+          body: |
+            ## Ports v${{ steps.version.outputs.version }}
+
+            macOS menu bar app for viewing and managing open network ports.
+
+            ### Installation
+
+            1. Download `Ports.dmg` or `Ports.zip`
+            2. Extract and drag `Ports.app` to Applications
+            3. Launch Ports from Applications
+
+            **Note:** You may need to right-click and select "Open" the first time due to Gatekeeper.
+
+            ### Requirements
+            - macOS 13.0+
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
