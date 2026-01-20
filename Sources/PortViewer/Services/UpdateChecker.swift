@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 
 /// Service for checking and handling app updates from GitHub releases.
@@ -172,5 +173,3 @@ public actor UpdateChecker {
         return cleanVersion.split(separator: ".").compactMap { Int($0) }
     }
 }
-
-import AppKit

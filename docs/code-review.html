@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Review - Ports | CorvidLabs</title>
+    <style>
+        :root {
+            --bg: #1a1a2e;
+            --bg-secondary: #16213e;
+            --text: #eee;
+            --text-muted: #888;
+            --accent: #66d9a0;
+            --red: #ff6b6b;
+            --orange: #ffa726;
+            --blue: #4fc3f7;
+            --purple: #ba68c8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        h1, h2, h3, h4 {
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            color: var(--accent);
+            font-size: 2rem;
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 0.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h2 {
+            color: var(--blue);
+            font-size: 1.4rem;
+            margin-top: 2rem;
+        }
+
+        h3 {
+            color: var(--text);
+            font-size: 1.1rem;
+            margin-top: 1.5rem;
+        }
+
+        p {
+            margin-bottom: 1rem;
+            color: var(--text-muted);
+        }
+
+        .grade {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .grade-a { background: var(--accent); color: #000; }
+        .grade-b { background: var(--blue); color: #000; }
+        .grade-c { background: var(--orange); color: #000; }
+
+        .summary-box {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-left: 4px solid var(--accent);
+        }
+
+        .summary-box h3 {
+            margin-top: 0;
+            color: var(--accent);
+        }
+
+        .issue {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .issue.critical {
+            border-left: 4px solid var(--red);
+        }
+
+        .issue.minor {
+            border-left: 4px solid var(--orange);
+        }
+
+        .issue.good {
+            border-left: 4px solid var(--accent);
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-right: 0.5rem;
+        }
+
+        .tag-critical { background: var(--red); color: #fff; }
+        .tag-important { background: var(--orange); color: #000; }
+        .tag-good { background: var(--accent); color: #000; }
+
+        code {
+            font-family: 'SF Mono', 'Menlo', monospace;
+            background: rgba(255,255,255,0.1);
+            padding: 0.15rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.85rem;
+        }
+
+        pre {
+            background: #0d0d1a;
+            border-radius: 8px;
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+            font-family: 'SF Mono', 'Menlo', monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        th {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        ul, ol {
+            margin: 1rem 0;
+            padding-left: 1.5rem;
+        }
+
+        li {
+            margin: 0.5rem 0;
+            color: var(--text-muted);
+        }
+
+        .file-ref {
+            color: var(--purple);
+            font-family: 'SF Mono', monospace;
+            font-size: 0.85rem;
+        }
+
+        .checklist {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .checklist li::before {
+            content: "✓ ";
+            color: var(--accent);
+        }
+
+        .checklist li.fail::before {
+            content: "✗ ";
+            color: var(--red);
+        }
+
+        footer {
+            margin-top: 3rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Code Review: Ports</h1>
+
+    <div class="summary-box">
+        <h3>Summary</h3>
+        <p>Overall Grade: <span class="grade grade-b">B+</span></p>
+        <p>This codebase demonstrates <strong>strong adherence</strong> to CorvidLabs conventions with excellent use of modern Swift patterns. The code is well-structured with proper actor isolation, async/await throughout, and good Sendable conformance.</p>
+    </div>
+
+    <h2>📋 CorvidLabs Compliance Checklist</h2>
+
+    <ul class="checklist">
+        <li>K&R brace style (opening brace on same line)</li>
+        <li>No force unwraps (<code>!</code>, <code>try!</code>, <code>as!</code>)</li>
+        <li>async/await patterns (no completion handlers)</li>
+        <li>Sendable conformance for concurrency</li>
+        <li>Descriptive generic names (not single letters)</li>
+        <li>Proper MARK sections</li>
+        <li>4-space indentation</li>
+        <li>Strict concurrency enabled</li>
+        <li class="fail">Explicit access control on ALL declarations</li>
+    </ul>
+
+    <h2>🚨 Critical Issues</h2>
+
+    <div class="issue critical">
+        <span class="tag tag-critical">Critical</span>
+        <h4>Missing Access Control Modifiers</h4>
+        <p>CorvidLabs requires explicit access control on ALL declarations.</p>
+
+        <h4>Affected Files:</h4>
+        <ul>
+            <li><span class="file-ref">App.swift:4</span> - <code>struct PortViewerApp</code> missing modifier</li>
+            <li><span class="file-ref">MenuBarView.swift:4</span> - <code>struct MenuBarView</code> missing modifier</li>
+            <li><span class="file-ref">PortDetailView.swift:4</span> - <code>struct PortDetailView</code> missing modifier</li>
+            <li><span class="file-ref">SettingsView.swift:4</span> - <code>struct SettingsView</code> missing modifier</li>
+            <li><span class="file-ref">AboutView.swift:4</span> - <code>struct AboutView</code> missing modifier</li>
+        </ul>
+
+        <p><strong>Fix:</strong> Add <code>internal</code> or <code>public</code> to all struct declarations and their <code>body</code> properties.</p>
+    </div>
+
+    <h2>⚠️ Minor Issues</h2>
+
+    <div class="issue minor">
+        <span class="tag tag-important">Important</span>
+        <h4>Import Order</h4>
+        <p><span class="file-ref">UpdateChecker.swift:176</span> - <code>import AppKit</code> should be at the top with other imports.</p>
+        <pre><code>// Current:
+import Foundation
+// ... 174 lines ...
+import AppKit
+
+// Should be:
+import Foundation
+import AppKit</code></pre>
+    </div>
+
+    <h2>✅ Excellent Patterns</h2>
+
+    <div class="issue good">
+        <span class="tag tag-good">Excellent</span>
+        <h4>Actor Usage</h4>
+        <p>Perfect use of actors for managing concurrent access in <code>PortScanner</code> and <code>ProcessKiller</code>.</p>
+        <pre><code>public actor PortScanner {
+    public func scan() async throws -> [PortInfo]
+}</code></pre>
+    </div>
+
+    <div class="issue good">
+        <span class="tag tag-good">Excellent</span>
+        <h4>Sendable Conformance</h4>
+        <p>All types properly conform to <code>Sendable</code> for Swift 6 concurrency.</p>
+        <pre><code>public struct PortInfo: Identifiable, Sendable, Hashable
+public enum Transport: String, Sendable, CaseIterable
+public enum Category: String, Sendable, CaseIterable
+public enum Risk: String, Sendable</code></pre>
+    </div>
+
+    <div class="issue good">
+        <span class="tag tag-good">Excellent</span>
+        <h4>Error Handling</h4>
+        <p>All error types conform to <code>Error, LocalizedError, Sendable</code> with descriptive messages.</p>
+        <pre><code>public enum ScanError: Error, LocalizedError, Sendable {
+    case scanFailed(String)
+
+    public var errorDescription: String? {
+        switch self {
+        case .scanFailed(let reason):
+            return "Port scan failed: \(reason)"
+        }
+    }
+}</code></pre>
+    </div>
+
+    <h2>📊 File-by-File Grades</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>File</th>
+                <th>Grade</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>PortInfo.swift</code></td>
+                <td><span class="grade grade-a">A</span></td>
+                <td>Perfect access control, excellent Sendable conformance</td>
+            </tr>
+            <tr>
+                <td><code>PortScanner.swift</code></td>
+                <td><span class="grade grade-a">A</span></td>
+                <td>Perfect actor implementation, great error handling</td>
+            </tr>
+            <tr>
+                <td><code>ProcessKiller.swift</code></td>
+                <td><span class="grade grade-a">A</span></td>
+                <td>Clean actor design, proper async patterns</td>
+            </tr>
+            <tr>
+                <td><code>UpdateChecker.swift</code></td>
+                <td><span class="grade grade-b">B+</span></td>
+                <td>Good design, minor import order issue</td>
+            </tr>
+            <tr>
+                <td><code>LaunchAtLogin.swift</code></td>
+                <td><span class="grade grade-a">A-</span></td>
+                <td>Correct @MainActor usage, good error handling</td>
+            </tr>
+            <tr>
+                <td><code>App.swift</code></td>
+                <td><span class="grade grade-b">B</span></td>
+                <td>Missing access modifiers, otherwise excellent</td>
+            </tr>
+            <tr>
+                <td><code>MenuBarView.swift</code></td>
+                <td><span class="grade grade-b">B-</span></td>
+                <td>Missing access modifiers on struct</td>
+            </tr>
+            <tr>
+                <td><code>PortDetailView.swift</code></td>
+                <td><span class="grade grade-b">B-</span></td>
+                <td>Missing access modifiers</td>
+            </tr>
+            <tr>
+                <td><code>SettingsView.swift</code></td>
+                <td><span class="grade grade-b">B-</span></td>
+                <td>Missing access modifiers</td>
+            </tr>
+            <tr>
+                <td><code>AboutView.swift</code></td>
+                <td><span class="grade grade-b">B-</span></td>
+                <td>Missing access modifiers</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>📝 Action Items</h2>
+
+    <h3>Priority 1 - Critical</h3>
+    <ol>
+        <li>Add explicit access modifiers to all view structs and their properties</li>
+        <li>Add explicit access modifiers to <code>App.swift</code></li>
+    </ol>
+
+    <h3>Priority 2 - Important</h3>
+    <ol>
+        <li>Fix import order in <code>UpdateChecker.swift</code></li>
+        <li>Add documentation to remaining public APIs</li>
+    </ol>
+
+    <h3>Priority 3 - Nice to Have</h3>
+    <ol>
+        <li>Add protocol abstractions for testability</li>
+        <li>Consider dual access patterns for error-prone operations</li>
+        <li>Strengthen type safety for favorites (<code>Set&lt;FavoritePort&gt;</code>)</li>
+    </ol>
+
+    <h2>💪 Key Strengths</h2>
+    <ul>
+        <li>Excellent concurrency design with actors</li>
+        <li>Perfect K&R brace style throughout</li>
+        <li>Zero force unwraps in entire codebase</li>
+        <li>Comprehensive Sendable conformance</li>
+        <li>Strict concurrency enabled in Package.swift</li>
+        <li>Well-organized MARK sections</li>
+        <li>Clean async/await patterns</li>
+    </ul>
+
+    <footer>
+        <p>Code Review by 0xLeif | CorvidLabs Standards | January 2025</p>
+    </footer>
+</body>
+</html>

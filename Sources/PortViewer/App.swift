@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct PortViewerApp: App {
+internal struct PortViewerApp: App {
 
     // MARK: - Properties
 
@@ -9,7 +9,7 @@ struct PortViewerApp: App {
 
     // MARK: - Body
 
-    var body: some Scene {
+    internal var body: some Scene {
         MenuBarExtra {
             MenuBarView()
                 .environmentObject(appState)
@@ -33,8 +33,9 @@ struct PortViewerApp: App {
 
 // MARK: - App State
 
+/// Main application state managing ports, settings, and services.
 @MainActor
-final class AppState: ObservableObject {
+internal final class AppState: ObservableObject {
 
     // MARK: - Published Properties
 
