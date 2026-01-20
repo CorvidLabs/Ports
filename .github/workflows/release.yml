@@ -44,6 +44,10 @@ jobs:
           mkdir -p Ports.app/Contents/MacOS
           mkdir -p Ports.app/Contents/Resources
           cp .build/release/PortViewer Ports.app/Contents/MacOS/Ports
+          chmod +x Ports.app/Contents/MacOS/Ports
+
+          # Remove quarantine attributes
+          xattr -cr Ports.app
 
           cat > Ports.app/Contents/Info.plist << PLIST
           <?xml version="1.0" encoding="UTF-8"?>
@@ -73,6 +77,9 @@ jobs:
           </dict>
           </plist>
           PLIST
+
+          # Ad-hoc sign the app (helps with Gatekeeper)
+          codesign --force --deep --sign - Ports.app
 
       - name: Create DMG
         run: |
@@ -130,7 +137,10 @@ jobs:
             3. Launch Ports from Applications
             4. Look for the network icon in your menu bar
 
-            > **Note:** First launch may require right-click → Open due to Gatekeeper.
+            > **First Launch (Important):**
+            > The app is not notarized. To open it:
+            > 1. Right-click the app → Open, or
+            > 2. Run in Terminal: `xattr -cr /Applications/Ports.app`
 
             ### Features
             - Smart categorization (dev, web, database, gaming, media, comms, macos)
