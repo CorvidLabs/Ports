@@ -3,80 +3,60 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'
+      - '[0-9]+.[0-9]+.[0-9]+*'
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version (e.g., 0.1.0-alpha)'
+        description: 'Version tag (e.g., 1.0.0)'
         required: true
-        default: '0.1.0-alpha'
+        type: string
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  APP_NAME: Ports
+  BUNDLE_ID: com.corvidlabs.ports
+  SIGNING_IDENTITY: "Developer ID Application: Zach Eriksen (8M8SAX62V2)"
+  NOTARIZE_PROFILE: "GitHub-Mac-Notarize"
 
 permissions:
   contents: write
 
 jobs:
-  build:
-    runs-on: macos-14
+  build-and-release:
+    name: Build, Sign & Notarize
+    runs-on: self-hosted
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Setup Swift
-        uses: swift-actions/setup-swift@v2
-        with:
-          swift-version: '5.9'
-
-      - name: Get Version
+      - name: Determine Version
         id: version
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+            echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
           else
-            echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Check Signing Secrets
-        id: signing
-        run: |
-          if [ -n "${{ secrets.APPLE_CERTIFICATE_BASE64 }}" ] && [ -n "${{ secrets.APPLE_TEAM_ID }}" ]; then
-            echo "enabled=true" >> $GITHUB_OUTPUT
-          else
-            echo "enabled=false" >> $GITHUB_OUTPUT
-            echo "⚠️ Signing secrets not configured - creating unsigned release"
+            echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
           fi
 
       - name: Build Release
         run: swift build -c release
 
-      - name: Import Certificate
-        if: steps.signing.outputs.enabled == 'true'
-        env:
-          APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-        run: |
-          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
-          KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
-
-          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-
-          echo "$APPLE_CERTIFICATE_BASE64" | base64 --decode > $RUNNER_TEMP/certificate.p12
-          security import $RUNNER_TEMP/certificate.p12 -P "$APPLE_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
-          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-          security list-keychain -d user -s $KEYCHAIN_PATH
-
-          rm $RUNNER_TEMP/certificate.p12
-
       - name: Create App Bundle
         run: |
-          VERSION="${{ steps.version.outputs.version }}"
+          # Clean and create bundle structure
+          rm -rf "${{ env.APP_NAME }}.app"
+          mkdir -p "${{ env.APP_NAME }}.app/Contents/MacOS"
+          mkdir -p "${{ env.APP_NAME }}.app/Contents/Resources"
 
-          mkdir -p Ports.app/Contents/MacOS
-          mkdir -p Ports.app/Contents/Resources
-          cp .build/release/PortViewer Ports.app/Contents/MacOS/Ports
-          chmod +x Ports.app/Contents/MacOS/Ports
+          # Copy executable
+          cp .build/release/PortViewer "${{ env.APP_NAME }}.app/Contents/MacOS/${{ env.APP_NAME }}"
 
-          cat > Ports.app/Contents/Info.plist << PLIST
+          # Create Info.plist
+          cat > "${{ env.APP_NAME }}.app/Contents/Info.plist" << 'PLIST'
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
@@ -89,10 +69,10 @@ jobs:
               <string>Ports</string>
               <key>CFBundleDisplayName</key>
               <string>Ports</string>
-              <key>CFBundleVersion</key>
-              <string>${VERSION}</string>
               <key>CFBundleShortVersionString</key>
-              <string>${VERSION}</string>
+              <string>${{ steps.version.outputs.version }}</string>
+              <key>CFBundleVersion</key>
+              <string>${{ github.run_number }}</string>
               <key>LSMinimumSystemVersion</key>
               <string>13.0</string>
               <key>LSUIElement</key>
@@ -101,125 +81,81 @@ jobs:
               <string>AppIcon</string>
               <key>NSHighResolutionCapable</key>
               <true/>
+              <key>NSHumanReadableCopyright</key>
+              <string>Copyright © 2026 CorvidLabs. MIT License.</string>
           </dict>
           </plist>
           PLIST
 
-      - name: Sign App
-        if: steps.signing.outputs.enabled == 'true'
-        env:
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      - name: Sign App Bundle
         run: |
-          codesign --force --options runtime --sign "Developer ID Application: CorvidLabs ($APPLE_TEAM_ID)" \
-            --timestamp Ports.app/Contents/MacOS/Ports
-          codesign --force --options runtime --sign "Developer ID Application: CorvidLabs ($APPLE_TEAM_ID)" \
-            --timestamp Ports.app
-          codesign --verify --verbose Ports.app
+          codesign --force --options runtime \
+            --sign "${{ env.SIGNING_IDENTITY }}" \
+            --timestamp \
+            "${{ env.APP_NAME }}.app/Contents/MacOS/${{ env.APP_NAME }}"
 
-      - name: Ad-hoc Sign (unsigned release)
-        if: steps.signing.outputs.enabled == 'false'
+          codesign --force --options runtime \
+            --sign "${{ env.SIGNING_IDENTITY }}" \
+            --timestamp \
+            "${{ env.APP_NAME }}.app"
+
+          # Verify signature
+          codesign --verify --verbose "${{ env.APP_NAME }}.app"
+
+      - name: Create ZIP for Notarization
         run: |
-          codesign --force --deep --sign - Ports.app
+          ditto -c -k --keepParent "${{ env.APP_NAME }}.app" "${{ env.APP_NAME }}.zip"
 
       - name: Notarize App
-        if: steps.signing.outputs.enabled == 'true'
-        env:
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        id: notarize
+        timeout-minutes: 15
         run: |
-          ditto -c -k --keepParent Ports.app Ports-notarize.zip
-          xcrun notarytool submit Ports-notarize.zip \
-            --apple-id "$APPLE_ID" \
-            --password "$APPLE_APP_PASSWORD" \
-            --team-id "$APPLE_TEAM_ID" \
-            --wait
-          xcrun stapler staple Ports.app
-          rm Ports-notarize.zip
+          xcrun notarytool submit "${{ env.APP_NAME }}.zip" \
+            --keychain-profile "${{ env.NOTARIZE_PROFILE }}" \
+            --wait \
+            --timeout 600 \
+            --no-progress \
+            2>&1 | tee notarization.log
 
-      - name: Create DMG
+          # Check if successful
+          if grep -q "status: Accepted" notarization.log; then
+            echo "Notarization successful"
+          else
+            echo "Notarization may have failed, checking status..."
+            cat notarization.log
+            exit 1
+          fi
+
+      - name: Staple Notarization Ticket
+        if: steps.notarize.outcome == 'success'
         run: |
-          brew install create-dmg
+          xcrun stapler staple "${{ env.APP_NAME }}.app"
 
-          mkdir -p dmg_contents
-          cp -r Ports.app dmg_contents/
-          ln -s /Applications dmg_contents/Applications
-
-          create-dmg \
-            --volname "Ports" \
-            --window-pos 200 120 \
-            --window-size 600 400 \
-            --icon-size 100 \
-            --icon "Ports.app" 150 185 \
-            --icon "Applications" 450 185 \
-            --hide-extension "Ports.app" \
-            --app-drop-link 450 185 \
-            --no-internet-enable \
-            "Ports-${{ steps.version.outputs.version }}.dmg" \
-            "dmg_contents/" \
-          || hdiutil create -volname "Ports" -srcfolder dmg_contents -ov -format UDZO "Ports-${{ steps.version.outputs.version }}.dmg"
-
-      - name: Sign DMG
-        if: steps.signing.outputs.enabled == 'true'
-        env:
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      - name: Create Distribution ZIP
         run: |
-          codesign --force --sign "Developer ID Application: CorvidLabs ($APPLE_TEAM_ID)" \
-            --timestamp "Ports-${{ steps.version.outputs.version }}.dmg"
+          rm "${{ env.APP_NAME }}.zip"
+          ditto -c -k --keepParent "${{ env.APP_NAME }}.app" "${{ env.APP_NAME }}-${{ steps.version.outputs.version }}.zip"
 
-      - name: Notarize DMG
-        if: steps.signing.outputs.enabled == 'true'
-        env:
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      - name: Verify Final App
         run: |
-          xcrun notarytool submit "Ports-${{ steps.version.outputs.version }}.dmg" \
-            --apple-id "$APPLE_ID" \
-            --password "$APPLE_APP_PASSWORD" \
-            --team-id "$APPLE_TEAM_ID" \
-            --wait
-          xcrun stapler staple "Ports-${{ steps.version.outputs.version }}.dmg"
+          # Verify code signature (spctl skipped - CLI tools in .app bundles aren't recognized as apps)
+          codesign --verify --deep --strict --verbose=2 "${{ env.APP_NAME }}.app"
+          codesign -dv --verbose=4 "${{ env.APP_NAME }}.app"
 
-      - name: Create ZIP
-        run: zip -r "Ports-${{ steps.version.outputs.version }}.zip" Ports.app
-
-      - name: Cleanup Keychain
-        if: always()
-        run: security delete-keychain $RUNNER_TEMP/app-signing.keychain-db || true
-
-      - name: Create Release
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: v${{ steps.version.outputs.version }}
-          name: Ports v${{ steps.version.outputs.version }}
+          files: ${{ env.APP_NAME }}-${{ steps.version.outputs.version }}.zip
+          generate_release_notes: true
           draft: false
-          prerelease: ${{ contains(steps.version.outputs.version, 'alpha') || contains(steps.version.outputs.version, 'beta') }}
-          files: |
-            Ports-${{ steps.version.outputs.version }}.dmg
-            Ports-${{ steps.version.outputs.version }}.zip
-          body: |
-            ## Ports v${{ steps.version.outputs.version }}
-
-            A lightweight macOS menu bar app for viewing and managing open network ports.
-
-            ${{ steps.signing.outputs.enabled == 'false' && '⚠️ **Unsigned Release** - After installing, run: `xattr -cr /Applications/Ports.app`' || '✅ **Signed & Notarized**' }}
-
-            ### Installation
-
-            1. Download `Ports-${{ steps.version.outputs.version }}.dmg`
-            2. Open the DMG and drag **Ports** to **Applications**
-            3. Launch Ports from Applications
-            4. Look for the network icon in your menu bar
-
-            ### Features
-            - Smart categorization (dev, web, database, gaming, media, comms)
-            - Risk indicators and exposure info
-            - One-click process termination
-            - Pin favorites for quick access
-            - Launch at login support
-
-            ### Requirements
-            - macOS 13.0 or later
+          prerelease: ${{ contains(steps.version.outputs.version, 'beta') || contains(steps.version.outputs.version, 'alpha') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Artifact (Manual Trigger)
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APP_NAME }}-${{ steps.version.outputs.version }}
+          path: ${{ env.APP_NAME }}-${{ steps.version.outputs.version }}.zip
