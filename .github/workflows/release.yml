@@ -27,11 +27,13 @@ permissions:
 jobs:
   build-and-release:
     name: Build, Sign & Notarize
+    # Self-hosted Mac required: codesign Developer ID identity + notarytool keychain profile live on this runner.
+    # Tag/dispatch-triggered only (no fork-PR exposure), so the public=github-hosted rule does not apply here.
     runs-on: self-hosted
     timeout-minutes: 30
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Determine Version
         id: version

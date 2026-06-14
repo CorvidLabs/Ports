@@ -3,8 +3,20 @@ name: CI
 on:
   push:
     branches: [main]
+    paths:
+      - 'Sources/**'
+      - 'Tests/**'
+      - 'Package.swift'
+      - 'Package.resolved'
+      - '.github/workflows/ci.yml'
   pull_request:
     branches: [main]
+    paths:
+      - 'Sources/**'
+      - 'Tests/**'
+      - 'Package.swift'
+      - 'Package.resolved'
+      - '.github/workflows/ci.yml'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -13,9 +25,11 @@ concurrency:
 jobs:
   build:
     name: Build & Test
-    runs-on: self-hosted
+    # PUBLIC repo: GitHub-hosted only — never self-hosted (fork PRs must not reach our boxes).
+    runs-on: macos-latest
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Build (Debug)
         run: swift build
@@ -58,9 +72,11 @@ jobs:
 
   lint:
     name: Lint
-    runs-on: self-hosted
+    # PUBLIC repo: GitHub-hosted only — never self-hosted (fork PRs must not reach our boxes).
+    runs-on: macos-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Check formatting
         run: |
