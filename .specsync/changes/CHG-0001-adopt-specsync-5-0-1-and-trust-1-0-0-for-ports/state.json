@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0001-adopt-specsync-5-0-1-and-trust-1-0-0-for-ports",
+  "slug": "adopt-specsync-5-0-1-and-trust-1-0-0-for-ports",
+  "title": "Adopt SpecSync 5.0.1 and Trust 1.0.0 for Ports",
+  "description": "Adopt SpecSync 5.0.1 and Trust 1.0.0 for Ports",
+  "kind": "migration",
+  "state": "draft",
+  "base_commit": "2bb41490dbf2c11db1d550236e0c6f78c6526f4f",
+  "created_at": 1783887611,
+  "updated_at": 1783887618,
+  "affected_specs": [],
+  "affected_paths": [
+    ".github/",
+    ".specsync/",
+    ".trust.toml",
+    ".augur.toml",
+    ".attest.json",
+    "fledge.toml",
+    "AGENTS.md"
+  ],
+  "no_spec_change": true,
+  "no_spec_change_rationale": "Governance only; UI, APIs, public CI, and self-hosted signing and notarization releases are unchanged.",
+  "acceptance_criteria": [
+    "Debug build",
+    "tests",
+    "and release build pass; integrations and Trust doctor are healthy; UI",
+    "CI",
+    "and signed release boundaries remain unchanged."
+  ],
+  "selected_artifacts": [
+    "context",
+    "research",
+    "design",
+    "plan",
+    "tasks",
+    "testing",
+    "docs"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "yes",
+    "public_contract": "no"
+  }
+}
