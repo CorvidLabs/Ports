@@ -1,0 +1,25 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "user:0xLeif",
+      "timestamp": 1784045641,
+      "digest": "72f392726657d0062c983163642d23eae047de7e73f4667e97bb4426dd36ba04",
+      "note": "Definition reviewed for the SpecSync 5.0.1 and Trust 1.0.0 migration; criteria and no-spec rationale are repository-specific."
+    },
+    {
+      "gate": "definition",
+      "actor": "user:0xLeif",
+      "timestamp": 1784047805,
+      "digest": "8bca8d5b1db956ef0defc2aabe5593b951c86a1a9e10a90e1cb31412cf609f7f",
+      "note": "Definition reapproved after rebasing the migration onto the separately verified main-branch CI repair."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "user:0xLeif",
+      "timestamp": 1784047854,
+      "digest": "bc73eb1580982fcb387602907034d74fc67d84eb337634c4f6b57542d872955c",
+      "note": "Closing approval after exact rebased migration verification: debug build, 196 tests, and release build passed."
+    }
+  ]
+}

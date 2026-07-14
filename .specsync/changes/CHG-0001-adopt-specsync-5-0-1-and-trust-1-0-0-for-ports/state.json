@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0001-adopt-specsync-5-0-1-and-trust-1-0-0-for-ports",
+  "slug": "adopt-specsync-5-0-1-and-trust-1-0-0-for-ports",
+  "title": "Adopt SpecSync 5.0.1 and Trust 1.0.0 for Ports",
+  "description": "Adopt SpecSync 5.0.1 and Trust 1.0.0 for Ports",
+  "kind": "migration",
+  "state": "accepted",
+  "base_commit": "2bb41490dbf2c11db1d550236e0c6f78c6526f4f",
+  "created_at": 1783887611,
+  "updated_at": 1784047854,
+  "affected_specs": [],
+  "affected_paths": [
+    ".github/",
+    ".specsync/",
+    ".trust.toml",
+    ".augur.toml",
+    ".attest.json",
+    "fledge.toml",
+    "AGENTS.md",
+    ".gitignore",
+    ".claude/"
+  ],
+  "no_spec_change": true,
+  "no_spec_change_rationale": "The migration adds governance configuration only; UI and public APIs are unchanged, and existing CI, signing, notarization, and release workflows remain independent.",
+  "acceptance_criteria": [
+    "Debug and release builds pass.",
+    "The native Swift test suite passes.",
+    "SpecSync 5.0.1 reports all four agent integrations and validates the committed SDD lifecycle.",
+    "Trust doctor and verification pass through the repository's native Fledge lane.",
+    "Existing UI, CI, signing, notarization, and release boundaries remain unchanged."
+  ],
+  "selected_artifacts": [
+    "context",
+    "research",
+    "design",
+    "plan",
+    "tasks",
+    "testing",
+    "docs"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "yes",
+    "public_contract": "no"
+  }
+}
