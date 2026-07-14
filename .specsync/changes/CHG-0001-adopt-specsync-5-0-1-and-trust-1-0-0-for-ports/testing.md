@@ -5,4 +5,4 @@ artifact: testing
 
 # Testing
 
-Run native Fledge verification, agent status, Trust doctor, and hosted checks.
+Run the debug build, Swift test suite, release build, strict SpecSync validation, all-agent status, Trust doctor, Trust verification, and the hosted pull-request checks. After merge, confirm the same Trust lane and existing CI remain green on `main`.

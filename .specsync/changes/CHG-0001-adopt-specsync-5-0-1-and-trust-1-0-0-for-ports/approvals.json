@@ -1,3 +1,11 @@
 {
-  "approvals": []
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "user:0xLeif",
+      "timestamp": 1784045641,
+      "digest": "72f392726657d0062c983163642d23eae047de7e73f4667e97bb4426dd36ba04",
+      "note": "Definition reviewed for the SpecSync 5.0.1 and Trust 1.0.0 migration; criteria and no-spec rationale are repository-specific."
+    }
+  ]
 }

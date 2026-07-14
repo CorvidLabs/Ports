@@ -1,6 +1,6 @@
 ---
 id: CHG-0001-adopt-specsync-5-0-1-and-trust-1-0-0-for-ports
-state: draft
+state: implementing
 type: migration
 base_commit: 2bb41490dbf2c11db1d550236e0c6f78c6526f4f
 ---
@@ -17,12 +17,12 @@ Adopt SpecSync 5.0.1 and Trust 1.0.0 for Ports
 
 ## Acceptance Criteria
 
-- Debug build
-- tests
-- and release build pass; integrations and Trust doctor are healthy; UI
-- CI
-- and signed release boundaries remain unchanged.
+- Debug and release builds pass.
+- The native Swift test suite passes.
+- SpecSync 5.0.1 reports all four agent integrations and validates the committed SDD lifecycle.
+- Trust doctor and verification pass through the repository's native Fledge lane.
+- Existing UI, CI, signing, notarization, and release boundaries remain unchanged.
 
 ## No-spec Rationale
 
-Governance only; UI, APIs, public CI, and self-hosted signing and notarization releases are unchanged.
+The migration adds governance configuration only; UI and public APIs are unchanged, and existing CI, signing, notarization, and release workflows remain independent.

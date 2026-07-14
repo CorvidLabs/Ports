@@ -49,5 +49,13 @@ dmg_contents/
 .env
 .env.*
 
-# Claude
-.claude/
+# Claude local state; keep the project-scoped SpecSync integration versioned.
+.claude/*
+!.claude/commands/
+.claude/commands/*
+!.claude/commands/specsync/
+!.claude/commands/specsync/*.md
+!.claude/skills/
+.claude/skills/*
+!.claude/skills/spec-sync/
+!.claude/skills/spec-sync/SKILL.md
