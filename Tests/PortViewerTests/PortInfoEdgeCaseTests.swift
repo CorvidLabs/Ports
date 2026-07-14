@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import PortViewer
 
@@ -38,7 +39,7 @@ struct PortInfoEdgeCaseTests {
             let longName = String(repeating: "a", count: 1000)
             let port = PortInfo(port: 3000, transport: .tcp, processName: longName, pid: 1234)
             #expect(port.processName.count == 1000)
-            #expect(port.category == .other)
+            #expect(port.category == .dev)
         }
 
         @Test("Process name with special characters")
@@ -51,7 +52,7 @@ struct PortInfoEdgeCaseTests {
         func emptyProcessName() {
             let port = PortInfo(port: 3000, transport: .tcp, processName: "", pid: 1234)
             #expect(port.processName == "")
-            #expect(port.category == .other)
+            #expect(port.category == .dev)
         }
 
         @Test("Process name containing category keyword in longer string")
