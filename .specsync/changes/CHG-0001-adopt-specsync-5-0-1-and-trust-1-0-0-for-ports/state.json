@@ -5,10 +5,10 @@
   "title": "Adopt SpecSync 5.0.1 and Trust 1.0.0 for Ports",
   "description": "Adopt SpecSync 5.0.1 and Trust 1.0.0 for Ports",
   "kind": "migration",
-  "state": "implementing",
+  "state": "accepted",
   "base_commit": "2bb41490dbf2c11db1d550236e0c6f78c6526f4f",
   "created_at": 1783887611,
-  "updated_at": 1784045641,
+  "updated_at": 1784047854,
   "affected_specs": [],
   "affected_paths": [
     ".github/",
