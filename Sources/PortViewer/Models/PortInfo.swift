@@ -205,7 +205,7 @@ public struct PortInfo: Identifiable, Sendable, Hashable {
 
         // Development tools
         let devProcesses = [
-            "node", "bun", "deno", "python", "ruby", "java", "go", "cargo", "rustc",
+            "node", "bun", "deno", "python", "ruby", "java", "cargo", "rustc",
             "swift", "xcode", "lldb", "webpack", "vite", "esbuild", "rollup",
             "npm", "yarn", "pnpm", "tsx", "ts-node", "nodemon", "pm2",
             "flask", "django", "rails", "spring", "gradle", "maven",
@@ -217,7 +217,7 @@ public struct PortInfo: Identifiable, Sendable, Hashable {
             "git", "gh", "hub"
         ]
         let devPorts = [3000, 3001, 4200, 5173, 5174, 8080, 8081, 8888, 9229, 35729, 24678, 4000, 5000, 8000]
-        if devProcesses.contains(where: { proc.contains($0) }) || devPorts.contains(port) {
+        if proc == "go" || devProcesses.contains(where: { proc.contains($0) }) || devPorts.contains(port) {
             return .dev
         }
 

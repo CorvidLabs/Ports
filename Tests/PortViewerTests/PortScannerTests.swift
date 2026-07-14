@@ -269,7 +269,7 @@ struct PortScannerTests {
         // Web processes
         @Test("Apache process is categorized as web")
         func apacheIsWeb() {
-            let port = PortInfo(port: 8081, transport: .tcp, processName: "apache2", pid: 1234)
+            let port = PortInfo(port: 8082, transport: .tcp, processName: "apache2", pid: 1234)
             #expect(port.category == .web)
         }
 
@@ -281,7 +281,7 @@ struct PortScannerTests {
 
         @Test("httpd process is categorized as web")
         func httpdIsWeb() {
-            let port = PortInfo(port: 8081, transport: .tcp, processName: "httpd", pid: 1234)
+            let port = PortInfo(port: 8082, transport: .tcp, processName: "httpd", pid: 1234)
             #expect(port.category == .web)
         }
 

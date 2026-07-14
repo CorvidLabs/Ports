@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import PortViewer
 
@@ -36,7 +37,7 @@ struct PortInfoEdgeCaseTests {
         @Test("Very long process name is handled")
         func veryLongProcessName() {
             let longName = String(repeating: "a", count: 1000)
-            let port = PortInfo(port: 3000, transport: .tcp, processName: longName, pid: 1234)
+            let port = PortInfo(port: 9999, transport: .tcp, processName: longName, pid: 1234)
             #expect(port.processName.count == 1000)
             #expect(port.category == .other)
         }
@@ -49,7 +50,7 @@ struct PortInfoEdgeCaseTests {
 
         @Test("Empty-like process name")
         func emptyProcessName() {
-            let port = PortInfo(port: 3000, transport: .tcp, processName: "", pid: 1234)
+            let port = PortInfo(port: 9999, transport: .tcp, processName: "", pid: 1234)
             #expect(port.processName == "")
             #expect(port.category == .other)
         }
