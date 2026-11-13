@@ -29,6 +29,11 @@
     "Sources/PortViewer/"
   ],
   "ignored_paths": [],
+  "verification_ignored_paths": [
+    ".chough/sessions/",
+    ".chough/archive/",
+    ".chough/bugs/"
+  ],
   "verification_commands": [
     "swift build",
     "swift test",
