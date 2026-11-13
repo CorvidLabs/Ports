@@ -6,7 +6,7 @@
   "title": "List Chough 0.6.0 record folders in verification_ignored_paths",
   "description": "List Chough 0.6.0 record folders in verification_ignored_paths",
   "kind": "operations",
-  "state": "draft",
+  "state": "approved",
   "base_commit": "44a580c363228b9df82af55a218aafd9908fd161",
   "created_at": 1794580977,
   "updated_at": 1794580977,
